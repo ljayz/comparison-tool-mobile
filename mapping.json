@@ -1,0 +1,23 @@
+{
+  "components": {
+    "Card": {
+      "appearances": {
+        "outline": {
+          "mapping": {
+            "bodyPaddingHorizontal": 14,
+            "bodyPaddingVertical": 10
+          }
+        }
+      }
+    },
+    "Divider": {
+      "appearances": {
+        "default": {
+          "mapping": {
+            "height": 0
+          }
+        }
+      }
+    }
+  }
+}
