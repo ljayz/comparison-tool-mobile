@@ -15,14 +15,9 @@ import {Products} from '../components/products';
 
 export const Home = () => {
   const styles = useStyleSheet(themedStyles);
-  const theme = useTheme();
 
   return (
-    <SafeAreaView
-      style={[
-        styles.flex,
-        {backgroundColor: theme['background-basic-color-1']},
-      ]}>
+    <SafeAreaView style={styles.container}>
       <TopNavigation alignment="center" title="Products" />
       <Divider />
       <Products />
@@ -32,12 +27,8 @@ export const Home = () => {
 };
 
 const themedStyles = StyleService.create({
-  flex: {
-    flex: 1,
-  },
   container: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: 'background-basic-color-1',
   },
 });

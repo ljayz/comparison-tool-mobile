@@ -1,6 +1,6 @@
 import React from 'react';
 import {SafeAreaView} from 'react-native';
-import {Layout, Text, TopNavigation} from '@ui-kitten/components';
+import {StyleService, useStyleSheet} from '@ui-kitten/components';
 
 import {Details} from '../components/details';
 import {DetailsTopNavigation} from '../components/detailsTopNavigation';
@@ -8,8 +8,10 @@ import {Divider} from '../components/divider';
 import {Footer} from '../components/footer';
 
 export const Comparison = () => {
+  const styles = useStyleSheet(themedStyles);
+
   return (
-    <SafeAreaView style={{flex: 1}}>
+    <SafeAreaView style={styles.container}>
       <DetailsTopNavigation />
       <Divider />
       <Details />
@@ -17,3 +19,10 @@ export const Comparison = () => {
     </SafeAreaView>
   );
 };
+
+const themedStyles = StyleService.create({
+  container: {
+    flex: 1,
+    backgroundColor: 'background-basic-color-1',
+  },
+});
