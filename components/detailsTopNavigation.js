@@ -5,12 +5,17 @@ import {
   TopNavigation,
   TopNavigationAction,
 } from '@ui-kitten/components';
-import {useAtom, useAtomValue} from 'jotai';
+import {useAtom, useAtomValue, useSetAtom} from 'jotai';
 
-import {comparisonProductsAtom, viewIndexComparisonAtom} from '../jotai';
+import {
+  comparisonProductsAtom,
+  myComparisonTriggerDeleteAtom,
+  viewIndexComparisonAtom,
+} from '../jotai';
 
 const LeftIcon = props => <Icon {...props} name="arrow-back" />;
 const RightIcon = props => <Icon {...props} name="arrow-forward" />;
+const TrashIcon = props => <Icon {...props} name="trash" />;
 
 export const DetailsTopNavigation = () => {
   const [rightTopNavigationDisabled, setRightTopNavigationDisabled] =
@@ -19,11 +24,19 @@ export const DetailsTopNavigation = () => {
   const [viewIndexComparison, setViewIndexComparison] = useAtom(
     viewIndexComparisonAtom,
   );
+  const setMyComparisonTriggerDelete = useSetAtom(
+    myComparisonTriggerDeleteAtom,
+  );
   const onLeftPress = () => {
+    setMyComparisonTriggerDelete(false);
     setViewIndexComparison(viewIndexComparison - 1);
   };
   const onRightPress = () => {
+    setMyComparisonTriggerDelete(false);
     setViewIndexComparison(viewIndexComparison + 1);
+  };
+  const onDeletePress = () => {
+    setMyComparisonTriggerDelete(true);
   };
   const renderLeftAction = () => (
     <TopNavigationAction
@@ -33,11 +46,18 @@ export const DetailsTopNavigation = () => {
     />
   );
   const renderRightAction = () => (
-    <TopNavigationAction
-      icon={RightIcon}
-      onPress={onRightPress}
-      disabled={rightTopNavigationDisabled}
-    />
+    <>
+      {data && Array.isArray(data.data) && data.data.length ? (
+        <TopNavigationAction icon={TrashIcon} onPress={onDeletePress} />
+      ) : (
+        ''
+      )}
+      <TopNavigationAction
+        icon={RightIcon}
+        onPress={onRightPress}
+        disabled={rightTopNavigationDisabled}
+      />
+    </>
   );
   const renderSubtitle = () => {
     if (!data || (Array.isArray(data.data) && !data.data.length)) {

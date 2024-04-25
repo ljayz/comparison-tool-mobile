@@ -16,6 +16,7 @@ import {
   myComparisonAtom,
   myComparisonStorageReaderAtomLoadable,
   myComparisonStorageWriterAtom,
+  myComparisonTriggerDeleteAtom,
   viewIndexComparisonAtom,
 } from '../jotai';
 
@@ -33,6 +34,9 @@ export const Details = () => {
     myComparisonStorageReaderAtomLoadable,
   );
   const setMyComparisonStorage = useSetAtom(myComparisonStorageWriterAtom);
+  const [myComparisonTriggerDelete, setMyComparisonTriggerDelete] = useAtom(
+    myComparisonTriggerDeleteAtom,
+  );
 
   React.useEffect(() => {
     if (myComparisonStorage.state === 'hasData') {
@@ -76,6 +80,11 @@ export const Details = () => {
     }
   };
 
+  if (myComparisonTriggerDelete && product && product?.id) {
+    setMyComparisonTriggerDelete(false);
+    onDeleteButtonPress(product.id);
+  }
+
   // console.log('myComparisonStorage', myComparisonStorage);
   if (!data || !data.data.length) {
     return (
@@ -103,9 +112,7 @@ export const Details = () => {
         <View>
           <Avatar style={styles.photo} source={{uri: product.image}} />
         </View>
-        <Text style={[styles.description, styles.section]} appearance="hint">
-          {product.name}
-        </Text>
+        <Text style={[styles.description, styles.section]}>{product.name}</Text>
         <Layout
           level="1"
           style={[styles.layoutContainer, styles.setting, styles.section]}>
@@ -150,13 +157,13 @@ export const Details = () => {
             onPress={onViewButtonPress}>
             View
           </Button>
-          <Button
+          {/* <Button
             style={styles.actionButton}
             size="giant"
             status="danger"
             onPress={() => onDeleteButtonPress(product.id)}>
             Delete
-          </Button>
+          </Button> */}
         </View>
       </ScrollView>
     </Layout>

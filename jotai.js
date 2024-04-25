@@ -93,6 +93,7 @@ const comparisonProductsAtom = atomWithQuery(() => ({
 const comparisonProductsAtomWithRefresh = atomWithRefresh(
   comparisonProductsAtom,
 );
+const myComparisonTriggerDeleteAtom = atom(false);
 
 export {
   comparisonProductsAtom,
@@ -100,6 +101,7 @@ export {
   homeProductsDefaultAtom,
   loadHomeProductsAtom,
   myComparisonAtom,
+  myComparisonTriggerDeleteAtom,
   myComparisonStorageReaderAtom,
   myComparisonStorageWriterAtom,
   myComparisonStorageReaderAtomLoadable,
