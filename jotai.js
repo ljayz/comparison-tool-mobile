@@ -15,18 +15,37 @@ const screenIndexAtom = atom(
     set(screenAtom, screens[index]);
   },
 );
-const loadHomeProductsAtom = atomWithInfiniteQuery(() => ({
+const loadHomeProductsAtom = atomWithInfiniteQuery((get, getQueryClient) => ({
   queryKey: ['products'],
   queryFn: async ({pageParam}) => {
     try {
-      const res = await fetch(`${API_URL}/products?page=${pageParam}`);
+      const resetPage = get(homeProductsResetPageAtom);
+      let page = pageParam;
+      if (resetPage) {
+        // const queryClient = getQueryClient();
+        // queryClient.resetQueries(
+        //   {queryKey: ['products']},
+        //   {cancelRefetch: false},
+        // );
+        page = 1;
+      }
+      const search = get(homeProductsSearchAtom);
+      const res = await fetch(
+        `${API_URL}/products?page=${page}&search=${search}`,
+      );
       return res.json();
     } catch (err) {
       console.log('Error fetching data', err);
     }
   },
   getNextPageParam: (lastPage, allPages, lastPageParam) => {
-    return lastPage.data.length ? lastPageParam + 1 : null;
+    const resetPage = get(homeProductsResetPageAtom);
+    // console.log('resetPage', resetPage, lastPageParam);
+    // if (resetPage) {
+    //   return 1;
+    // }
+
+    return lastPage?.data.length ? lastPageParam + 1 : null;
   },
   initialPageParam: 1,
 }));
@@ -36,7 +55,7 @@ const homeProductsAtom = atom(
   (get, set, pages) => {
     const productsArr = [];
     for (const page of pages) {
-      if (page.data) {
+      if (page?.data) {
         for (const product of page.data) {
           productsArr.push(product);
         }
@@ -45,6 +64,9 @@ const homeProductsAtom = atom(
     set(homeProductsDefaultAtom, productsArr);
   },
 );
+const homeProductsSearchAtom = atom('');
+const homeProductsSearchToggleAtom = atom(false);
+const homeProductsResetPageAtom = atom(false);
 const myComparisonAtom = atom([]);
 const myComparisonStorageReaderAtom = atom(async () => {
   // await AsyncStorage.removeItem('myComparison');
@@ -82,6 +104,7 @@ const myComparisonStorageReaderAtomUnwrap = unwrap(
   myComparisonStorageReaderAtom,
 );
 const viewIndexComparisonAtom = atom(0);
+const viewPagerIndexComparisonAtom = atom(0);
 const comparisonProductsAtom = atomWithQuery(() => ({
   queryKey: ['myComparison'],
   queryFn: async () => {
@@ -94,11 +117,26 @@ const comparisonProductsAtomWithRefresh = atomWithRefresh(
   comparisonProductsAtom,
 );
 const myComparisonTriggerDeleteAtom = atom(false);
+const aboutAtom = atomWithQuery(() => ({
+  queryKey: ['about'],
+  queryFn: async () => {
+    try {
+      const res = await fetch(`${API_URL}/about`);
+      return res.text();
+    } catch (err) {
+      return JSON.stringify({...err, ...{error: 'check'}});
+    }
+  },
+}));
 
 export {
+  aboutAtom,
   comparisonProductsAtom,
   homeProductsAtom,
   homeProductsDefaultAtom,
+  homeProductsResetPageAtom,
+  homeProductsSearchAtom,
+  homeProductsSearchToggleAtom,
   loadHomeProductsAtom,
   myComparisonAtom,
   myComparisonTriggerDeleteAtom,
@@ -109,4 +147,5 @@ export {
   screenAtom,
   screenIndexAtom,
   viewIndexComparisonAtom,
+  viewPagerIndexComparisonAtom,
 };

@@ -11,6 +11,7 @@ import {
   comparisonProductsAtom,
   myComparisonTriggerDeleteAtom,
   viewIndexComparisonAtom,
+  viewPagerIndexComparisonAtom,
 } from '../jotai';
 
 const LeftIcon = props => <Icon {...props} name="arrow-back" />;
@@ -24,16 +25,19 @@ export const DetailsTopNavigation = () => {
   const [viewIndexComparison, setViewIndexComparison] = useAtom(
     viewIndexComparisonAtom,
   );
+  const setViewPagerIndexComparison = useSetAtom(viewPagerIndexComparisonAtom);
   const setMyComparisonTriggerDelete = useSetAtom(
     myComparisonTriggerDeleteAtom,
   );
   const onLeftPress = () => {
     setMyComparisonTriggerDelete(false);
     setViewIndexComparison(viewIndexComparison - 1);
+    setViewPagerIndexComparison(0);
   };
   const onRightPress = () => {
     setMyComparisonTriggerDelete(false);
     setViewIndexComparison(viewIndexComparison + 1);
+    setViewPagerIndexComparison(0);
   };
   const onDeletePress = () => {
     setMyComparisonTriggerDelete(true);

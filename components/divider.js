@@ -5,10 +5,10 @@ import {
   useStyleSheet,
 } from '@ui-kitten/components';
 
-export const Divider = () => {
+export const Divider = ({styles: propStyles = {}}) => {
   const styles = useStyleSheet(themedStyles);
 
-  return <DividerKitten style={styles.divider} />;
+  return <DividerKitten style={[styles.divider, propStyles]} />;
 };
 
 const themedStyles = StyleService.create({

@@ -18,9 +18,7 @@ import {
 } from '../jotai';
 
 const HomeIcon = props => <Icon {...props} name="home" />;
-
 const PeopleIcon = props => <Icon {...props} name="people" />;
-
 const BadgeIcon = ({badgeText, ...props}) => {
   const styles = useStyleSheet(themedStyles);
 

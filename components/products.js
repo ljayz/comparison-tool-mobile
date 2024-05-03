@@ -11,11 +11,15 @@ import {
   Spinner,
   Layout,
   useTheme,
+  Input,
 } from '@ui-kitten/components';
 import {useAtom, useAtomValue, useSetAtom} from 'jotai';
 
 import {
   homeProductsAtom,
+  homeProductsResetPageAtom,
+  homeProductsSearchAtom,
+  homeProductsSearchToggleAtom,
   loadHomeProductsAtom,
   myComparisonAtom,
   myComparisonStorageReaderAtomLoadable,
@@ -23,6 +27,7 @@ import {
 } from '../jotai';
 
 const BookmarkIcon = props => <Icon {...props} name="bookmark" />;
+const SearchIcon = props => <Icon {...props} name="search" />;
 
 const lazadaLogoURL = 'https://iili.io/JS6Ucg4.png';
 const shopeeLogoURL = 'https://iili.io/JSPfQs9.png';
@@ -35,13 +40,18 @@ export const Products = () => {
     {
       data,
       fetchNextPage,
-      isPending,
       isError,
       isFetching,
+      isRefetching,
+      isPending,
       isFetchingNextPage,
       hasNextPage,
+      refetch,
     },
   ] = useAtom(loadHomeProductsAtom);
+  const [search, setSearch] = useAtom(homeProductsSearchAtom);
+  const homeProductsSearchToggle = useAtomValue(homeProductsSearchToggleAtom);
+  const setHomeProductsResetPage = useSetAtom(homeProductsResetPageAtom);
 
   React.useEffect(() => {
     if (data?.pages) {
@@ -157,16 +167,36 @@ export const Products = () => {
   //   return <Text>Error</Text>;
   // }
 
+  if (isRefetching) {
+    setHomeProductsResetPage(false);
+  }
+
   return (
-    <List
-      contentContainerStyle={styles.productList}
-      data={products}
-      numColumns={2}
-      onEndReached={fetchNextPage}
-      onEndReachedThreshold={0.5}
-      renderItem={renderProductItem}
-      ListFooterComponent={renderListFooter}
-    />
+    <>
+      {homeProductsSearchToggle && (
+        <Layout style={styles.listHeader} level="2">
+          <Input
+            placeholder="Search"
+            value={search}
+            accessoryRight={SearchIcon}
+            onChangeText={nextValue => setSearch(nextValue)}
+            onSubmitEditing={() => {
+              setHomeProductsResetPage(true);
+              refetch();
+            }}
+          />
+        </Layout>
+      )}
+      <List
+        contentContainerStyle={styles.productList}
+        data={products}
+        numColumns={2}
+        onEndReached={fetchNextPage}
+        onEndReachedThreshold={0.5}
+        renderItem={renderProductItem}
+        ListFooterComponent={renderListFooter}
+      />
+    </>
   );
 };
 
@@ -207,6 +237,10 @@ const themedStyles = StyleService.create({
   },
   iconButton: {
     paddingHorizontal: 0,
+  },
+  listHeader: {
+    padding: 16,
+    backgroundColor: 'background-basic-color-1',
   },
   listFooter: {
     flex: 1,
