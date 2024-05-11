@@ -32,8 +32,8 @@ export const Details = () => {
 
   const onViewButtonPress = link => {
     if (link) {
-      console.log('openURL', link);
-      // Linking.openURL(link);
+      // console.log('openURL', link);
+      Linking.openURL(link);
     }
   };
 
