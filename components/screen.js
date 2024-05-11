@@ -1,10 +1,11 @@
-import React from 'react';
+import React, {Suspense} from 'react';
 import {useAtomValue} from 'jotai';
 
 import {screenAtom} from '../jotai';
 import {Home} from '../screens/home';
 import {Comparison} from '../screens/comparison';
 import {About} from '../screens/about';
+import {Loading} from './loading';
 
 export const Screen = () => {
   const screen = useAtomValue(screenAtom);
@@ -16,5 +17,9 @@ export const Screen = () => {
     SelectedScreen = About;
   }
 
-  return <SelectedScreen />;
+  return (
+    <Suspense fallback={<Loading />}>
+      <SelectedScreen />
+    </Suspense>
+  );
 };

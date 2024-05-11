@@ -4774,6 +4774,11 @@ joi@^17.2.1:
     "@sideway/formula" "^3.0.1"
     "@sideway/pinpoint" "^2.0.0"
 
+jotai-effect@^1.0.0:
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/jotai-effect/-/jotai-effect-1.0.0.tgz#caf5342fa7ddef1db84c99be4b04a631980f4120"
+  integrity sha512-eCgKKG4BACDzuJGYTu0xZRk1C1MEOvbAhC3L8w7YufQ2lSLORwNX/WFnCuZxLFX0sDLkTUeoUzOYaw8wnXY+UQ==
+
 jotai-tanstack-query@^0.8.5:
   version "0.8.5"
   resolved "https://registry.yarnpkg.com/jotai-tanstack-query/-/jotai-tanstack-query-0.8.5.tgz#12616f18a7623cc3786f3e2d7b1e1b2dc60394b2"

@@ -13,84 +13,69 @@ import {
   useTheme,
   Input,
 } from '@ui-kitten/components';
-import {useAtom, useAtomValue, useSetAtom} from 'jotai';
+import {useAtom, useAtomValue} from 'jotai';
 
 import {
   homeProductsAtom,
-  homeProductsResetPageAtom,
   homeProductsSearchAtom,
   homeProductsSearchToggleAtom,
   loadHomeProductsAtom,
   myComparisonAtom,
-  myComparisonStorageReaderAtomLoadable,
-  myComparisonStorageWriterAtom,
+  queryClientAtom,
+  homeProductsEffectAtom,
 } from '../jotai';
+import {Loading} from './loading';
 
 const BookmarkIcon = props => <Icon {...props} name="bookmark" />;
 const SearchIcon = props => <Icon {...props} name="search" />;
 
-const lazadaLogoURL = 'https://iili.io/JS6Ucg4.png';
-const shopeeLogoURL = 'https://iili.io/JSPfQs9.png';
-
 export const Products = () => {
+  useAtom(homeProductsEffectAtom);
+
   const styles = useStyleSheet(themedStyles);
   const theme = useTheme();
-  const [products, setProducts] = useAtom(homeProductsAtom);
+  const products = useAtomValue(homeProductsAtom);
+  const queryClient = useAtomValue(queryClientAtom);
+  const homeProductsSearchToggle = useAtomValue(homeProductsSearchToggleAtom);
   const [
     {
-      data,
       fetchNextPage,
       isError,
       isFetching,
-      isRefetching,
       isPending,
       isFetchingNextPage,
       hasNextPage,
-      refetch,
     },
   ] = useAtom(loadHomeProductsAtom);
   const [search, setSearch] = useAtom(homeProductsSearchAtom);
-  const homeProductsSearchToggle = useAtomValue(homeProductsSearchToggleAtom);
-  const setHomeProductsResetPage = useSetAtom(homeProductsResetPageAtom);
-
-  React.useEffect(() => {
-    if (data?.pages) {
-      setProducts(data.pages);
-    }
-  }, [data?.pages, setProducts]);
-
-  const myComparison = useAtomValue(myComparisonAtom);
-  const myComparisonStorage = useAtomValue(
-    myComparisonStorageReaderAtomLoadable,
-  );
-  const setMyComparisonStorage = useSetAtom(myComparisonStorageWriterAtom);
-
-  React.useEffect(() => {
-    if (myComparisonStorage.state === 'hasData') {
-      setMyComparisonStorage('load');
-    }
-  }, [myComparisonStorage, setMyComparisonStorage]);
+  const [myComparison, setMyComparison] = useAtom(myComparisonAtom);
 
   const onItemPress = index => {
     // do nothing
   };
 
   const onItemBookmarkPress = product => {
-    if (myComparisonStorage.state !== 'hasData') {
-      return;
-    }
-
     const productId = String(product.item.id);
-    // console.log(productId, myComparisonStorage.data);
+    // console.log('productId', productId);
 
-    if (!productId || myComparison.includes(productId)) {
+    if (
+      !productId ||
+      (myComparison && myComparison.split(',').includes(productId))
+    ) {
       return;
     }
 
-    const newData = [...myComparison];
-    newData.push(productId);
-    setMyComparisonStorage('update', newData);
+    setMyComparison(async savedData => {
+      const awaitSavedData = await savedData;
+      if (awaitSavedData) {
+        const splittedData = awaitSavedData.split(',');
+        splittedData.push(productId);
+        return splittedData.join(',');
+      }
+      return productId;
+    });
   };
+  // setMyComparison('');
   // console.log('myComparison', myComparison);
 
   const renderItemFooter = product => (
@@ -111,9 +96,11 @@ export const Products = () => {
       <View style={styles.itemHeaderSite}>
         <Image
           style={styles.siteLogo}
-          source={{
-            uri: product.item.site === 'shopee' ? shopeeLogoURL : lazadaLogoURL,
-          }}
+          source={
+            product.item.site === 'shopee'
+              ? require('../img/shopeeLogo.png')
+              : require('../img/lazadaLogo.png')
+          }
         />
         <Text category="s1">
           {product.item.site === 'shopee' ? 'Shopee' : 'Lazada'}
@@ -144,7 +131,7 @@ export const Products = () => {
       onPress={() => onItemPress(product)}>
       <View>
         <Text category="c2" numberOfLines={3}>
-          {product.item.name}
+          {product.item.name.padEnd(50, '\n')}
         </Text>
       </View>
     </Card>
@@ -159,17 +146,11 @@ export const Products = () => {
     </Layout>
   );
 
-  // if (isFetching) {
-  //   return <Text>Fetching</Text>;
-  // }
-
   // if (isError) {
   //   return <Text>Error</Text>;
   // }
-
-  if (isRefetching) {
-    setHomeProductsResetPage(false);
-  }
+  console.log('isPending', isPending);
+  console.log('isFetching', isFetching);
 
   return (
     <>
@@ -181,21 +162,25 @@ export const Products = () => {
             accessoryRight={SearchIcon}
             onChangeText={nextValue => setSearch(nextValue)}
             onSubmitEditing={() => {
-              setHomeProductsResetPage(true);
-              refetch();
+              queryClient.resetQueries({
+                queryKey: ['products'],
+              });
             }}
           />
         </Layout>
       )}
-      <List
-        contentContainerStyle={styles.productList}
-        data={products}
-        numColumns={2}
-        onEndReached={fetchNextPage}
-        onEndReachedThreshold={0.5}
-        renderItem={renderProductItem}
-        ListFooterComponent={renderListFooter}
-      />
+      {isPending && <Loading />}
+      {
+        <List
+          contentContainerStyle={styles.productList}
+          data={products}
+          numColumns={2}
+          onEndReached={() => hasNextPage && fetchNextPage()}
+          onEndReachedThreshold={1}
+          renderItem={renderProductItem}
+          ListFooterComponent={renderListFooter}
+        />
+      }
     </>
   );
 };

@@ -8,8 +8,11 @@ import {
 import {useAtom, useAtomValue, useSetAtom} from 'jotai';
 
 import {
-  comparisonProductsAtom,
-  myComparisonTriggerDeleteAtom,
+  loadMyComparisonProductsAtom,
+  myComparisonAtom,
+  myComparisonProductAtom,
+  queryClientAtom,
+  // myComparisonTriggerDeleteAtom,
   viewIndexComparisonAtom,
   viewPagerIndexComparisonAtom,
 } from '../jotai';
@@ -21,27 +24,57 @@ const TrashIcon = props => <Icon {...props} name="trash" />;
 export const DetailsTopNavigation = () => {
   const [rightTopNavigationDisabled, setRightTopNavigationDisabled] =
     React.useState(false);
-  const [{data, isPending, isError}] = useAtom(comparisonProductsAtom);
+  const [currentMyComparison, setCurrentMyComparison] = React.useState(null);
+  const setViewPagerIndexComparison = useSetAtom(viewPagerIndexComparisonAtom);
+  const queryClient = useAtomValue(queryClientAtom);
+  const product = useAtomValue(myComparisonProductAtom);
+  const [{data, isPending, isError}] = useAtom(loadMyComparisonProductsAtom);
   const [viewIndexComparison, setViewIndexComparison] = useAtom(
     viewIndexComparisonAtom,
   );
-  const setViewPagerIndexComparison = useSetAtom(viewPagerIndexComparisonAtom);
-  const setMyComparisonTriggerDelete = useSetAtom(
-    myComparisonTriggerDeleteAtom,
-  );
+  const [myComparison, setMyComparison] = useAtom(myComparisonAtom);
+
   const onLeftPress = () => {
-    setMyComparisonTriggerDelete(false);
     setViewIndexComparison(viewIndexComparison - 1);
     setViewPagerIndexComparison(0);
   };
   const onRightPress = () => {
-    setMyComparisonTriggerDelete(false);
     setViewIndexComparison(viewIndexComparison + 1);
     setViewPagerIndexComparison(0);
   };
   const onDeletePress = () => {
-    setMyComparisonTriggerDelete(true);
+    const productId = product.id;
+    setMyComparison(async savedData => {
+      const awaitSavedData = await savedData;
+      if (awaitSavedData) {
+        const splittedData = awaitSavedData.split(',');
+        const indexToRemove = splittedData.indexOf(productId);
+        if (indexToRemove > -1) {
+          splittedData.splice(indexToRemove, 1);
+
+          if (splittedData.length <= 0) {
+            setViewIndexComparison(0);
+          } else if (viewIndexComparison >= splittedData.length) {
+            setViewIndexComparison(viewIndexComparison - 1);
+          }
+
+          return splittedData.join(',');
+        }
+      }
+      return '';
+    });
   };
+
+  React.useEffect(() => {
+    if (currentMyComparison === null) {
+      setCurrentMyComparison(myComparison);
+    } else {
+      queryClient.resetQueries({
+        queryKey: ['myComparison'],
+      });
+    }
+  }, [myComparison, currentMyComparison, setCurrentMyComparison, queryClient]);
+
   const renderLeftAction = () => (
     <TopNavigationAction
       icon={LeftIcon}
@@ -51,10 +84,8 @@ export const DetailsTopNavigation = () => {
   );
   const renderRightAction = () => (
     <>
-      {data && Array.isArray(data.data) && data.data.length ? (
+      {data && Array.isArray(data.data) && data.data.length >= 1 && (
         <TopNavigationAction icon={TrashIcon} onPress={onDeletePress} />
-      ) : (
-        ''
       )}
       <TopNavigationAction
         icon={RightIcon}
@@ -64,7 +95,11 @@ export const DetailsTopNavigation = () => {
     </>
   );
   const renderSubtitle = () => {
-    if (!data || (Array.isArray(data.data) && !data.data.length)) {
+    if (
+      !data ||
+      !data?.data ||
+      (Array.isArray(data.data) && !data.data.length)
+    ) {
       return null;
     }
 

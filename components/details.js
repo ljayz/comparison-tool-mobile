@@ -10,110 +10,39 @@ import {
   useStyleSheet,
 } from '@ui-kitten/components';
 import {Divider} from './divider';
-import {useAtom, useAtomValue, useSetAtom} from 'jotai';
+import {useAtom, useAtomValue} from 'jotai';
 
 import {
-  comparisonProductsAtom,
-  myComparisonAtom,
-  myComparisonStorageReaderAtomLoadable,
-  myComparisonStorageWriterAtom,
-  myComparisonTriggerDeleteAtom,
-  viewIndexComparisonAtom,
+  loadMyComparisonProductsAtom,
+  myComparisonEffectAtom,
+  myComparisonProductAtom,
   viewPagerIndexComparisonAtom,
 } from '../jotai';
-
-const lazadaLogoURL = 'https://iili.io/JS6Ucg4.png';
-const shopeeLogoURL = 'https://iili.io/JSPfQs9.png';
+import {Loading} from './loading';
 
 export const Details = () => {
+  useAtom(myComparisonEffectAtom);
   const styles = useStyleSheet(themedStyles);
-  const [{data, isPending, isError, refetch, isRefetching}] = useAtom(
-    comparisonProductsAtom,
-  );
-  const [viewIndexComparison, setViewIndexComparison] = useAtom(
-    viewIndexComparisonAtom,
-  );
-  const [product, setProduct] = React.useState(null);
-  const myComparison = useAtomValue(myComparisonAtom);
-  const myComparisonStorage = useAtomValue(
-    myComparisonStorageReaderAtomLoadable,
-  );
-  const setMyComparisonStorage = useSetAtom(myComparisonStorageWriterAtom);
-  const [myComparisonTriggerDelete, setMyComparisonTriggerDelete] = useAtom(
-    myComparisonTriggerDeleteAtom,
-  );
+
+  const product = useAtomValue(myComparisonProductAtom);
+  const [{data, isPending, isError}] = useAtom(loadMyComparisonProductsAtom);
   const [selectedIndex, setSelectedIndex] = useAtom(
     viewPagerIndexComparisonAtom,
   );
 
-  React.useEffect(() => {
-    if (myComparisonStorage.state === 'hasData') {
-      setMyComparisonStorage('load');
-    }
-  }, [myComparisonStorage, setMyComparisonStorage]);
-
-  // React.useEffect(() => {}, [myComparison]);
-
-  React.useEffect(() => {
-    if (Array.isArray(data?.data) && data.data.length) {
-      setProduct(data.data[viewIndexComparison]);
-    }
-  }, [data, viewIndexComparison, setProduct]);
-  // console.log('data', data);
-  // console.log('viewIndexComparison', viewIndexComparison);
-
-  const onViewButtonPress = type => {
-    let link;
-    if (type === 'default' && product.site === 'shopee') {
-      const name = encodeURIComponent(product.name);
-      link = `https://shopee.ph/${name}i.${product.shopid}.${product.itemid}`;
-    } else if (type === 'default' && product.site === 'lazada') {
-      link = `https://www.lazada.com.ph/products/${product.name
-        .toLowerCase()
-        .replace(' ', '-')}-i${product.itemid}-s${product.shopid}.html`;
-    } else if (type === 'comparison' && product.site === 'shopee') {
-      const name = encodeURIComponent(product.c_name);
-      link = `https://shopee.ph/${name}i.${product.c_shopid}.${product.c_itemid}`;
-    } else if (type === 'comparison' && product.site === 'lazada') {
-      link = `https://www.lazada.com.ph/products/${product.c_name
-        .toLowerCase()
-        .replace(' ', '-')}-i${product.c_itemid}-s${product.c_shopid}.html`;
-    }
-
+  const onViewButtonPress = link => {
     if (link) {
-      Linking.openURL(link);
+      console.log('openURL', link);
+      // Linking.openURL(link);
     }
   };
 
-  const onDeleteButtonPress = id => {
-    if (myComparisonStorage.state !== 'hasData') {
-      return;
-    }
-
-    const myComparisonCopy = [...myComparison];
-    const indexToRemove = myComparisonCopy.indexOf(id);
-
-    if (indexToRemove > -1) {
-      myComparisonCopy.splice(indexToRemove, 1);
-      // console.log('myComparisonCopy', myComparisonCopy);
-      // console.log('viewIndexComparison', viewIndexComparison);
-      if (!myComparisonCopy.length) {
-        setViewIndexComparison(0);
-        setProduct(null);
-      } else if (viewIndexComparison >= myComparisonCopy.length) {
-        setViewIndexComparison(viewIndexComparison - 1);
-      }
-      setMyComparisonStorage('delete', myComparisonCopy, refetch);
-    }
-  };
-
-  if (myComparisonTriggerDelete && product && product?.id) {
-    setMyComparisonTriggerDelete(false);
-    onDeleteButtonPress(product.id);
+  if (isPending) {
+    return <Loading />;
   }
 
-  // console.log('myComparisonStorage', myComparisonStorage);
-  if (!data || !data.data.length) {
+  // console.log('data', data);
+  if (!data || !data?.data?.length || !product) {
     return (
       <Layout style={styles.containerNoData}>
         <Text appearance="hint">No data to view</Text>
@@ -121,17 +50,9 @@ export const Details = () => {
     );
   }
 
-  if (isPending || isRefetching || !product) {
-    return (
-      <Layout style={styles.containerNoData}>
-        <Text appearance="hint">Loading...</Text>
-      </Layout>
-    );
-  }
-
-  if (isError) {
-    return <Text>Error</Text>;
-  }
+  // if (isError) {
+  //   return <Text>Error</Text>;
+  // }
 
   return (
     <ViewPager
@@ -149,9 +70,11 @@ export const Details = () => {
           <View style={styles.itemHeaderSite}>
             <Image
               style={styles.siteLogo}
-              source={{
-                uri: product.site === 'shopee' ? shopeeLogoURL : lazadaLogoURL,
-              }}
+              source={
+                product.site === 'shopee'
+                  ? require('../img/shopeeLogo.png')
+                  : require('../img/lazadaLogo.png')
+              }
             />
             <Text category="s1">
               {product.site === 'shopee' ? 'Shopee' : 'Lazada'}
@@ -227,13 +150,12 @@ export const Details = () => {
               {product.brand ? product.brand : 'No Brand'}
             </Text>
           </Layout>
-
           <View style={styles.actionContainer}>
             <Button
               appearance="ghost"
               style={styles.actionButton}
               status="control"
-              onPress={() => onViewButtonPress('default')}>
+              onPress={() => onViewButtonPress(product.url)}>
               View Product
             </Button>
           </View>
@@ -252,10 +174,11 @@ export const Details = () => {
             <View style={styles.itemHeaderSite}>
               <Image
                 style={styles.siteLogo}
-                source={{
-                  uri:
-                    product.c_site === 'shopee' ? shopeeLogoURL : lazadaLogoURL,
-                }}
+                source={
+                  product.c_site === 'shopee'
+                    ? require('../img/shopeeLogo.png')
+                    : require('../img/lazadaLogo.png')
+                }
               />
               <Text category="s1">
                 {product.c_site === 'shopee' ? 'Shopee' : 'Lazada'}
@@ -336,10 +259,11 @@ export const Details = () => {
 
             <View style={styles.actionContainer}>
               <Button
+                appearance="ghost"
                 style={styles.actionButton}
-                size="giant"
-                onPress={() => onViewButtonPress('comparison')}>
-                View
+                status="control"
+                onPress={() => onViewButtonPress(product.c_url)}>
+                View Product
               </Button>
             </View>
           </ScrollView>
@@ -356,9 +280,11 @@ export const Details = () => {
           <View style={[styles.itemHeaderSite, {flex: 1}]}>
             <Image
               style={styles.siteLogo}
-              source={{
-                uri: product.site !== 'shopee' ? shopeeLogoURL : lazadaLogoURL,
-              }}
+              source={
+                product.site !== 'shopee'
+                  ? require('../img/shopeeLogo.png')
+                  : require('../img/lazadaLogo.png')
+              }
             />
             <Text category="s1">
               {product.site !== 'shopee' ? 'Shopee' : 'Lazada'}
@@ -367,9 +293,9 @@ export const Details = () => {
           <Layout
             style={[
               styles.layoutContainer,
-              {flex: 25, alignContent: 'center', borderRadius: 10},
+              styles.containerNoProductsToCompare,
             ]}>
-            <Text style={{flex: 1, textAlign: 'center'}}>
+            <Text style={styles.noProductsToCompareText}>
               No product to compare
             </Text>
           </Layout>
@@ -389,6 +315,11 @@ const themedStyles = StyleService.create({
     backgroundColor: 'background-basic-color-2',
     flex: 1,
     justifyContent: 'center',
+  },
+  containerNoProductsToCompare: {
+    flex: 25,
+    alignContent: 'center',
+    borderRadius: 10,
   },
   borderRadius: {
     borderRadius: 10,
@@ -469,5 +400,9 @@ const themedStyles = StyleService.create({
   },
   shopeeBackground: {
     backgroundColor: 'color-orange-600',
+  },
+  noProductsToCompareText: {
+    flex: 1,
+    textAlign: 'center',
   },
 });

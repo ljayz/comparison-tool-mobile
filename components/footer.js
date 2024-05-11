@@ -8,19 +8,18 @@ import {
   useTheme,
 } from '@ui-kitten/components';
 import {View, Text} from 'react-native';
-import {useAtom, useAtomValue, useSetAtom} from 'jotai';
+import {useAtom, useAtomValue} from 'jotai';
 
-import {
-  myComparisonAtom,
-  myComparisonStorageReaderAtomLoadable,
-  myComparisonStorageWriterAtom,
-  screenIndexAtom,
-} from '../jotai';
+import {myComparisonAtom, screenIndexAtom} from '../jotai';
 
 const HomeIcon = props => <Icon {...props} name="home" />;
 const PeopleIcon = props => <Icon {...props} name="people" />;
-const BadgeIcon = ({badgeText, ...props}) => {
+const BadgeIcon = ({...props}) => {
   const styles = useStyleSheet(themedStyles);
+  const myComparison = useAtomValue(myComparisonAtom);
+  // console.log('bottomMyComparison', myComparison);
+  const count = myComparison ? String(myComparison.split(',').length) : 0;
+  const badgeText = String(count);
 
   return (
     <View style={styles.badgeContainer}>
@@ -36,29 +35,7 @@ const BadgeIcon = ({badgeText, ...props}) => {
 
 export const Footer = () => {
   const [selectedIndex, setSelectedIndex] = useAtom(screenIndexAtom);
-  const [badgeText, setBadgeText] = React.useState('0');
-  const myComparison = useAtomValue(myComparisonAtom);
-  const myComparisonStorage = useAtomValue(
-    myComparisonStorageReaderAtomLoadable,
-  );
-  const setMyComparisonStorage = useSetAtom(myComparisonStorageWriterAtom);
-  const styles = useStyleSheet(themedStyles);
   const theme = useTheme();
-
-  React.useEffect(() => {
-    if (myComparisonStorage.state === 'hasData') {
-      setMyComparisonStorage('load');
-    }
-  }, [myComparisonStorage, setMyComparisonStorage]);
-
-  React.useEffect(() => {
-    if (Array.isArray(myComparison)) {
-      const count = String(myComparison.length);
-      setBadgeText(count);
-    } else {
-      setBadgeText('0');
-    }
-  }, [myComparison]);
 
   return (
     <BottomNavigation
@@ -67,10 +44,7 @@ export const Footer = () => {
       selectedIndex={selectedIndex}
       style={{backgroundColor: theme['background-basic-color-1']}}>
       <BottomNavigationTab icon={HomeIcon} title="Home" />
-      <BottomNavigationTab
-        icon={<BadgeIcon badgeText={badgeText} />}
-        title="My Comparisons"
-      />
+      <BottomNavigationTab icon={<BadgeIcon />} title="My Comparisons" />
       <BottomNavigationTab icon={PeopleIcon} title="About Us" />
     </BottomNavigation>
   );

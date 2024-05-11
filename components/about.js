@@ -1,12 +1,11 @@
 import React from 'react';
-import {ImageBackground, ScrollView, View} from 'react-native';
+import {ImageBackground, ScrollView} from 'react-native';
 import {Layout, StyleService, Text, useStyleSheet} from '@ui-kitten/components';
 import Markdown from 'react-native-markdown-display';
 import {Divider} from './divider';
 import {aboutAtom} from '../jotai';
 import {useAtom} from 'jotai';
-
-const logoUrl = 'https://iili.io/JSblB1V.png';
+import {Image} from 'react-native-svg';
 
 const rules = {
   heading1: (node, children) => (
@@ -40,20 +39,27 @@ const rules = {
     </Text>
   ),
   hr: node => <Divider key={node.key} styles={{backgroundColor: '#ccc'}} />,
-  strong: (node, children) => <Text category="s1">{children}</Text>,
-  text: (node, children) => <Text key={node.key}>{node.content}</Text>,
+  strong: (node, children) => (
+    <Text key={node.key} category="s1">
+      {children}
+    </Text>
+  ),
+  text: node => <Text key={node.key}>{node.content}</Text>,
   textgroup: (node, children) => <Text key={node.key}>{children}</Text>,
 };
 
 export const About = () => {
   const styles = useStyleSheet(themedStyles);
-  const [{data, isPending, isError}] = useAtom(aboutAtom);
+  const [{data, isPending}] = useAtom(aboutAtom);
 
   return (
     <Layout style={styles.container} level="2">
       <ScrollView contentContainerStyle={styles.contentContainer}>
         <Layout style={styles.logoContainer} level="1">
-          <ImageBackground style={styles.logo} source={{uri: logoUrl}} />
+          <ImageBackground
+            style={styles.logo}
+            source={require('../img/priceProLogo.png')}
+          />
         </Layout>
 
         <Layout style={styles.descriptionContainer} level="2">
@@ -77,8 +83,11 @@ const themedStyles = StyleService.create({
     alignItems: 'center',
   },
   logo: {
+    textAlign: 'center',
+    padding: 30,
     height: 100,
     width: 100,
+    backgroundColor: 'yellow',
     marginVertical: 16,
   },
   descriptionContainer: {
